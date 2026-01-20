@@ -16,6 +16,14 @@ It is a project purely to learn more about machine learning and data science.
 - Prepare data for modeling and analysis with XGBoost
 - Train and evaluate models on historical currency data
 
+---
 
+## Todo
+
+- commandline logic to pick training, predicting, validating etc
+- saving model locally 
+- plotting of price forecast 
+- get latest prices for more upto date data
+- Gui for ease of use
 
 ---
