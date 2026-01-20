@@ -93,7 +93,7 @@ def get_league_history(league:str) -> pd.DataFrame:
 
         df['rolling_mean_7'] = df.groupby('item_name')['Price'].shift(1).rolling(7).mean()
         
-        df['rolling_std_7'] = df.groupby('item_name')['Price'].shift(1).rolling(3).std()
+        df['rolling_std_7'] = df.groupby('item_name')['Price'].shift(1).rolling(7).std()
     
         # log transform target
         df["log_price"] = np.log1p(df["Price"])
@@ -144,7 +144,7 @@ def update_master_set():
 
         df['rolling_mean_7'] = df.groupby('item_name')['Price'].shift(1).rolling(7).mean()
         
-        df['rolling_std_7'] = df.groupby('item_name')['Price'].shift(1).rolling(3).std()
+        df['rolling_std_7'] = df.groupby('item_name')['Price'].shift(1).rolling(7).std()
     
         # log transform target
         df["log_price"] = np.log1p(df["Price"])
