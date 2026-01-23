@@ -59,7 +59,7 @@ def get_league_history(league:str) -> pd.DataFrame:
             if res.status_code == 200:
                 # grab the history
                 history = res.json()['pairs'][0]['history']
-                name = ids=[id]
+                name = ids[id]
                 # pull day, name and price into separate ordered tuples 
                 days, item_name, prices = zip(*((day['timestamp'][:10],name,day['rate']) for day in history))
 
@@ -67,7 +67,6 @@ def get_league_history(league:str) -> pd.DataFrame:
                 data['Date'] += list(days)
                 data['item_name'] += list(item_name)
                 data['Price'] += list(prices)
-
             else:
                 print(f'Request for {ids[id]} failed with code: {res.status_code}')
 
@@ -131,7 +130,7 @@ def update_master_set():
         # rename and sort
         df.rename(columns={'Get':'item_name', 'Value':'Price'}, inplace=True)
         df.sort_values(['item_name','Date'], inplace=True, ignore_index=True)
-
+        
         # add number of days the league has been going on
         league_start = df['Date'].min()
         df['days_in_league'] = (df['Date'] - league_start).dt.days
@@ -152,11 +151,19 @@ def update_master_set():
         # add to out
         df_out = pd.concat([df_out,df], ignore_index=True)
 
-    # get active league data
+    # get active league data and add it to out
     df_current = get_league_history('Keepers')
-
-    # add it to out and save in csv
     df_out = pd.concat([df_out,df_current], ignore_index=True)
+
+    # add day of week
+    df_out['dow'] = df_out['Date'].dt.weekday
+
+    # add league age for weighting
+    league_order = (df_out[['League', 'Date']].groupby('League')['Date'].min().sort_values().index.tolist())
+    league_age = {league:age for age, league in enumerate(league_order[::-1])}
+    df_out['league_age'] = df_out['League'].map(league_age)
+
+    # save in csv
     df_out.to_csv('datasets/master_set.csv', index=False)
 
 if __name__ == '__main__':
