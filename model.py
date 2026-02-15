@@ -8,7 +8,51 @@ and generate price predictions from input features.
 import pandas as pd
 import numpy as np
 from xgboost import XGBRegressor
-from sklearn.metrics import mean_absolute_error
+from sklearn.metrics import mean_squared_error
+
+CURRENCIES = [
+    "Orb of Transmutation",
+    "Orb of Augmentation",
+    "Orb of Alteration",
+    "Chromatic Orb",
+    "Jeweller's Orb",
+    "Orb of Fusing",
+    "Orb of Chance",
+    "Orb of Alchemy",
+    "Orb of Scouring",
+    "Blessed Orb",
+    "Regal Orb",
+    "Gemcutter's Prism",
+    "Glassblower's Bauble",
+    "Exalted Orb",
+    "Divine Orb",
+    "Vaal Orb",
+    "Orb of Regret",
+    "Orb of Annulment",
+    "Orb of Binding",
+    "Ancient Orb",
+    "Harbinger's Orb",
+    "Fracturing Orb",
+    "Sacred Orb",
+    "Enkindling Orb",
+    "Instilling Orb",
+    "Orb of Horizons",
+    "Orb of Unmaking",
+    "Mirror of Kalandra",
+    "Hinekora's Lock",
+    "Mirror Shard",
+    "Awakener's Orb",
+    'Veiled Exalted Orb',
+    'Veiled Chaos Orb',
+    'Orb of Dominance',
+    "Hunter's Exalted Orb",
+    "Warlord's Exalted Orb",
+    "Crusader's Exalted Orb",
+    "Redeemer's Exalted Orb",
+    'Orb of Conflict',
+    'Exceptional Eldritch Ichor',
+    'Exceptional Eldritch Ember'
+]
 
 FEATURES = [
     'days_in_league',
@@ -72,7 +116,7 @@ def validate_model(df:pd.DataFrame,model:XGBRegressor) -> dict[float,float]:
     for decay in decay_grid:
         # calculate weights
         df['sample_weight'] = np.exp(-decay * df['league_age'])
-        maes = []
+        mses = []
         
         # holdout loop with one league left out
         for holdout in leagues:
@@ -89,11 +133,11 @@ def validate_model(df:pd.DataFrame,model:XGBRegressor) -> dict[float,float]:
             
             # record MAE for league
             pred = np.expm1(model.predict(test[FEATURES]))
-            maes.append(mean_absolute_error(test['Price'],pred))
-        # output and save mean MAE for this decay
-        results[decay] = np.mean(maes)
-        print(f'Decay: {decay:.2f} => MAE: {results[decay]:.4f}')
-    # output best MAE:decay (min value)
+            mses.append(mean_squared_error(test['Price'],pred))
+        # output and save mean MSE for this decay
+        results[decay] = np.mean(mses)
+        print(f'Decay: {decay:.2f} => MSE: {results[decay]:.4f}')
+    # output best MSE:decay (min value)
     print(f'Best Decay: {min(results, key=results.get)}')
     return results
 
@@ -101,9 +145,11 @@ def main():
     # read data and prep for use
     df = pd.read_csv('datasets/master_set.csv')
     df['Date'] = pd.to_datetime(df['Date'])
+    # only get the currencies we want
+    #df = df[df['item_name'].isin(CURRENCIES)]
+    df = df[df['item_name'] == 'Divine Orb']
 
     # init model
-    # TODO:try with reg:pseudohubererro as alt maybe?
     model = XGBRegressor(
         objective='reg:squarederror',
         n_estimators=500,
@@ -120,8 +166,7 @@ def main():
     )
     #validate model
     validate_model(df, model)
-    #TODO model might need splitting of currency types (scarabs,fragments,etc)
-    # validate_model needs to do check other param values and find best
+    # TODO validate_model needs to do check other param values and find best
 
 if __name__ == '__main__':
     main()
